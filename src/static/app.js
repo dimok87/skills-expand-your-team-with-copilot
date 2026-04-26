@@ -506,12 +506,16 @@ document.addEventListener("DOMContentLoaded", () => {
       nativeBtn.addEventListener("click", () => {
         navigator
           .share({ title: name, text: shareText, url: pageUrl })
-          .catch(() => {});
+          .catch((error) => {
+            if (error.name !== "AbortError") {
+              console.error("Error sharing activity:", error);
+            }
+          });
       });
     }
 
     twitterBtn.addEventListener("click", () => {
-      const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`;
+      const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`;
       window.open(tweetUrl, "_blank", "noopener,noreferrer");
     });
 
