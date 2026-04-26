@@ -472,6 +472,64 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Build a shareable text message for an activity
+  function buildShareText(name, details) {
+    const schedule = formatSchedule(details);
+    return `Check out "${name}" at Mergington High School! ${details.description} Schedule: ${schedule}`;
+  }
+
+  // Create social share buttons HTML for an activity
+  function createShareButtonsHtml(name) {
+    return `
+      <div class="share-buttons" data-activity-name="${name}">
+        <span class="share-label">Share:</span>
+        <button class="share-btn share-twitter" aria-label="Share on X (Twitter)" title="Share on X (Twitter)">𝕏</button>
+        <button class="share-btn share-facebook" aria-label="Share on Facebook" title="Share on Facebook">f</button>
+        <button class="share-btn share-whatsapp" aria-label="Share on WhatsApp" title="Share on WhatsApp">💬</button>
+        <button class="share-btn share-native hidden" aria-label="Share" title="Share">⬆</button>
+      </div>
+    `;
+  }
+
+  // Attach share button event listeners to an activity card
+  function attachShareListeners(card, name, details) {
+    const shareText = buildShareText(name, details);
+    const pageUrl = window.location.href.split("?")[0];
+
+    const twitterBtn = card.querySelector(".share-twitter");
+    const facebookBtn = card.querySelector(".share-facebook");
+    const whatsappBtn = card.querySelector(".share-whatsapp");
+    const nativeBtn = card.querySelector(".share-native");
+
+    if (navigator.share) {
+      nativeBtn.classList.remove("hidden");
+      nativeBtn.addEventListener("click", () => {
+        navigator
+          .share({ title: name, text: shareText, url: pageUrl })
+          .catch((error) => {
+            if (error.name !== "AbortError") {
+              console.error("Error sharing activity:", error);
+            }
+          });
+      });
+    }
+
+    twitterBtn.addEventListener("click", () => {
+      const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`;
+      window.open(tweetUrl, "_blank", "noopener,noreferrer");
+    });
+
+    facebookBtn.addEventListener("click", () => {
+      const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}&quote=${encodeURIComponent(shareText)}`;
+      window.open(fbUrl, "_blank", "noopener,noreferrer");
+    });
+
+    whatsappBtn.addEventListener("click", () => {
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + pageUrl)}`;
+      window.open(waUrl, "_blank", "noopener,noreferrer");
+    });
+  }
+
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
@@ -552,6 +610,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      ${createShareButtonsHtml(name)}
       <div class="activity-card-actions">
         ${
           currentUser
@@ -586,6 +645,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Attach social share button listeners
+    attachShareListeners(activityCard, name, details);
 
     activitiesList.appendChild(activityCard);
   }
